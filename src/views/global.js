@@ -23,6 +23,11 @@ export function initGlobalView(data) {
             sortGlobalTable(column);
         });
     });
+
+    const exportBtn = document.getElementById('btn-export-excel');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', exportToExcel);
+    }
 }
 
 function renderGlobalTable(data) {
@@ -150,4 +155,45 @@ function sortGlobalTable(column) {
     filteredData = sortData(filteredData, column, sortDirectionGlobal);
     sortDirectionGlobal *= -1;
     renderGlobalTable(filteredData);
+    updateGlobalStats(filteredData);
+}
+
+function exportToExcel() {
+    if (filteredData.length === 0) return;
+
+    // Header
+    const headers = ["Heure", "Salle", "Candidat", "Classe", "Parcours", "Problématique", "Juré 1", "Discipline 1", "Juré 2", "Discipline 2"];
+    
+    // Data rows
+    const rows = filteredData.map(item => [
+        item.heure,
+        item.salle,
+        item.eleve,
+        item.classe,
+        item.parcours,
+        item.problematique.replace(/"/g, '""'), // Escape quotes for CSV
+        item.j1,
+        item.d1,
+        item.j2 !== 'Aucune' ? item.j2 : '',
+        item.j2 !== 'Aucune' ? item.d2 : ''
+    ]);
+
+    // Build CSV content
+    // Use semicolon as separator for better compatibility with French Excel
+    const csvContent = "\uFEFF" + [
+        headers.join(";"),
+        ...rows.map(row => row.map(cell => `"${cell}"`).join(";"))
+    ].join("\n");
+
+    // Create and trigger download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute("href", url);
+    link.setAttribute("download", `planning_global_dnb_2026.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
