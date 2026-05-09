@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau de Bord - Oraux de Brevet</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        tr { transition: all 0.2s ease; }
+        
+        /* Styles spécifiques pour l'impression */
+        @media print {
+            @page { margin: 0.8cm; } /* Marges très réduites pour maximiser l'espace A4 */
+            .no-print { display: none !important; }
+            body { 
+                background-color: white; 
+                -webkit-print-color-adjust: exact; 
+                print-color-adjust: exact; 
+            }
+            main { padding: 0 !important; margin: 0 !important; max-width: 100% !important; }
+            .page-break { page-break-after: always; break-after: page; }
+            .page-break-inside-avoid { page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+
+    <!-- Navbar (Cachée à l'impression) -->
+    <nav class="bg-indigo-600 text-white shadow-lg no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-graduation-cap text-2xl"></i>
+                    <h1 class="text-xl font-bold tracking-tight">Gestion des Oraux - 3ème</h1>
+                </div>
+                <div>
+                    <button onclick="window.print()" class="bg-indigo-500 hover:bg-indigo-400 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm flex items-center gap-2">
+                        <i class="fas fa-print"></i> Imprimer la vue courante
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Système d'onglets (Caché à l'impression) -->
+        <div class="border-b border-slate-200 mb-6 no-print">
+            <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                <button onclick="switchTab('global')" id="tab-global" class="border-indigo-500 text-indigo-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors flex items-center gap-2">
+                    <i class="fas fa-globe"></i> Planning Global
+                </button>
+                <button onclick="switchTab('jures')" id="tab-jures" class="border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors flex items-center gap-2">
+                    <i class="fas fa-user-tie"></i> Convocations Jurés
+                </button>
+                <button onclick="switchTab('eleves')" id="tab-eleves" class="border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors flex items-center gap-2">
+                    <i class="fas fa-user-graduate"></i> Convocations Élèves
+                </button>
+            </nav>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- ONGLET 1 : PLANNING GLOBAL                 -->
+        <!-- ========================================== -->
+        <div id="view-global" class="block">
+            
+            <!-- Statistiques rapides -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 no-print" id="stats-container">
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex items-center gap-4">
+                    <div class="bg-indigo-100 text-indigo-600 p-3 rounded-lg"><i class="fas fa-users text-xl"></i></div>
+                    <div>
+                        <p class="text-sm text-slate-500 font-medium">Total Élèves</p>
+                        <p class="text-2xl font-bold text-slate-800" id="stat-total">0</p>
+                    </div>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex items-center gap-4">
+                    <div class="bg-emerald-100 text-emerald-600 p-3 rounded-lg"><i class="fas fa-door-open text-xl"></i></div>
+                    <div>
+                        <p class="text-sm text-slate-500 font-medium">Salles actives</p>
+                        <p class="text-2xl font-bold text-slate-800" id="stat-salles">0</p>
+                    </div>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex items-center gap-4">
+                    <div class="bg-amber-100 text-amber-600 p-3 rounded-lg"><i class="fas fa-chalkboard-teacher text-xl"></i></div>
+                    <div>
+                        <p class="text-sm text-slate-500 font-medium">Jurés impliqués</p>
+                        <p class="text-2xl font-bold text-slate-800" id="stat-jures">0</p>
+                    </div>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex items-center gap-4">
+                    <div class="bg-purple-100 text-purple-600 p-3 rounded-lg"><i class="fas fa-route text-xl"></i></div>
+                    <div>
+                        <p class="text-sm text-slate-500 font-medium">Parcours diff.</p>
+                        <p class="text-2xl font-bold text-slate-800" id="stat-parcours">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Outils de filtrage -->
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 mb-6 flex flex-col md:flex-row gap-4 no-print">
+                <div class="flex-1 relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-search text-slate-400"></i>
+                    </div>
+                    <input type="text" id="searchInput" placeholder="Rechercher un élève, un juré, un mot clé..." 
+                        class="block w-full pl-10 pr-3 py-2 border border-slate-200 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-shadow">
+                </div>
+                
+                <div class="flex flex-wrap gap-4">
+                    <select id="filterClasse" class="block w-full md:w-32 pl-3 pr-10 py-2 text-base border-slate-200 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-lg border">
+                        <option value="">Toutes classes</option>
+                    </select>
+                    
+                    <select id="filterParcours" class="block w-full md:w-40 pl-3 pr-10 py-2 text-base border-slate-200 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-lg border">
+                        <option value="">Tous parcours</option>
+                    </select>
+                    
+                    <select id="filterSalle" class="block w-full md:w-32 pl-3 pr-10 py-2 text-base border-slate-200 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-lg border">
+                        <option value="">Toutes salles</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Titre pour l'impression -->
+            <div class="hidden print:block mb-6 text-center">
+                <h2 class="text-2xl font-bold text-slate-800">Planning Global des Oraux</h2>
+                <p class="text-slate-500">Session 2026</p>
+            </div>
+
+            <!-- Tableau -->
+            <div class="bg-white shadow-sm print:shadow-none rounded-xl border border-slate-100 print:border-slate-300 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200">
+                        <thead class="bg-slate-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 print:py-2 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100" onclick="sortGlobalTable('heure')">
+                                    Heure <i class="fas fa-sort ml-1"></i>
+                                </th>
+                                <th scope="col" class="px-6 py-3 print:py-2 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100" onclick="sortGlobalTable('salle')">
+                                    Salle <i class="fas fa-sort ml-1"></i>
+                                </th>
+                                <th scope="col" class="px-6 py-3 print:py-2 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100" onclick="sortGlobalTable('eleve')">
+                                    Élève <i class="fas fa-sort ml-1"></i>
+                                </th>
+                                <th scope="col" class="px-6 py-3 print:py-2 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                    Classe
+                                </th>
+                                <th scope="col" class="px-6 py-3 print:py-2 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider w-1/3">
+                                    Parcours & Problématique
+                                </th>
+                                <th scope="col" class="px-6 py-3 print:py-2 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                    Jurys (Discipline)
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="globalTableBody" class="bg-white divide-y divide-slate-200">
+                            <!-- Les lignes seront injectées ici par JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Message de résultats vides -->
+                <div id="noResults" class="hidden text-center py-10">
+                    <i class="fas fa-search-minus text-4xl text-slate-300 mb-3"></i>
+                    <p class="text-slate-500 text-lg">Aucun résultat trouvé pour votre recherche.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- ONGLET 2 : CONVOCATIONS JURÉS              -->
+        <!-- ========================================== -->
+        <div id="view-jures" class="hidden">
+            
+            <!-- Sélecteur de Juré (Caché à l'impression) -->
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 mb-6 flex items-center gap-4 no-print">
+                <div class="bg-indigo-100 text-indigo-600 p-3 rounded-lg"><i class="fas fa-chalkboard-teacher text-xl"></i></div>
+                <div class="flex-1">
+                    <label for="jureSelect" class="block text-sm font-medium text-slate-700 mb-1">Sélectionnez un enseignant pour générer sa convocation :</label>
+                    <div class="flex flex-wrap gap-4">
+                        <select id="jureSelect" class="block w-full max-w-md pl-3 pr-10 py-2 text-base border-slate-200 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-lg border">
+                            <option value="">-- Choisissez un nom --</option>
+                        </select>
+                        <button onclick="printAllJures()" class="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+                            <i class="fas fa-print"></i> Tout afficher pour impression
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Conteneur d'impression des jurés -->
+            <div id="jurePrintContainer" class="hidden">
+                 <!-- Template dynamique injecté ici -->
+            </div>
+            
+            <div id="jureEmptyState" class="text-center py-20">
+                <div class="inline-block p-6 rounded-full bg-slate-100 text-slate-400 mb-4">
+                    <i class="fas fa-hand-pointer text-4xl"></i>
+                </div>
+                <h3 class="text-lg font-medium text-slate-800">Aucun juré sélectionné</h3>
+                <p class="text-slate-500 mt-1">Sélectionnez un nom dans la liste ci-dessus ou cliquez sur "Tout afficher".</p>
+            </div>
+
+        </div>
+
+        <!-- ========================================== -->
+        <!-- ONGLET 3 : CONVOCATIONS ÉLÈVES             -->
+        <!-- ========================================== -->
+        <div id="view-eleves" class="hidden">
+            
+            <!-- Sélecteur d'Élève (Caché à l'impression) -->
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 mb-6 flex items-center gap-4 no-print">
+                <div class="bg-indigo-100 text-indigo-600 p-3 rounded-lg"><i class="fas fa-user-graduate text-xl"></i></div>
+                <div class="flex-1">
+                    <label for="eleveSelect" class="block text-sm font-medium text-slate-700 mb-1">Générer la convocation pour :</label>
+                    <div class="flex flex-wrap gap-4">
+                        <select id="eleveSelect" class="block w-full max-w-md pl-3 pr-10 py-2 text-base border-slate-200 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-lg border">
+                            <option value="">-- Sélectionnez un élève --</option>
+                        </select>
+                        <button onclick="printAllEleves()" class="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+                            <i class="fas fa-print"></i> Tout afficher pour impression
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Conteneur d'impression des élèves -->
+            <div id="elevePrintContainer" class="hidden">
+                <!-- Template dynamique injecté ici -->
+            </div>
+
+            <div id="eleveEmptyState" class="text-center py-20">
+                <div class="inline-block p-6 rounded-full bg-slate-100 text-slate-400 mb-4">
+                    <i class="fas fa-file-signature text-4xl"></i>
+                </div>
+                <h3 class="text-lg font-medium text-slate-800">Aucun candidat sélectionné</h3>
+                <p class="text-slate-500 mt-1">Sélectionnez un nom ou cliquez sur "Tout afficher pour impression".</p>
+            </div>
+
+        </div>
+
+    </main>
+
+    <script>
+        // Données extraites du tableau
+        const rawData = [
+            { eleve: "AUBRY Albert Akoi Agamemnon", classe: "3EME1", parcours: "Parcours santé", problematique: "En quoi les jeux vidéos influencent-ils le développement scolaire des adolescents ?", d1: "SVT", d2: "Anglais", j1: "Vincent David", j2: "François Faye", heure: "11:00", salle: "Salle 1" },
+            { eleve: "BA Abygaëlle Bilel", classe: "3EME2", parcours: "Parcours citoyen", problematique: "Comment les auteurs africains ont-ils utilisé l'écriture pour afirmeer leur identité?", d1: "Français", d2: "Anglais", j1: "Olivier Baritou", j2: "Layla Jaït", heure: "11:00", salle: "Salle 2" },
+            { eleve: "BERGOT Mathieu Yohan", classe: "3EME2", parcours: "Parcours citoyen", problematique: "Comment le basket est-il devenu bien plus qu'un sport et s'est-il imposé comme une culture à part entière ?", d1: "EPS", d2: "Aucune", j1: "Alassane Ndiaye", j2: "Claire Drame", heure: "11:00", salle: "Salle 3" },
+            { eleve: "BODELOT Julien Achille", classe: "3EME2", parcours: "Parcours santé", problematique: "Quels sont les bienfaits de l'activité physique sur la santé ?", d1: "SVT", d2: "EPS", j1: "Nathalie Mboup", j2: "Claire Drame", heure: "11:00", salle: "Salle 4" },
+            { eleve: "BOUYER Louis Marie", classe: "3EME1", parcours: "Parcours santé", problematique: "En quoi une mauvaise alimentation influence négativement l'organisme et que faire pour y remédier ?", d1: "SVT", d2: "EPS", j1: "Vincent David", j2: "Alassane Ndiaye", heure: "11:00", salle: "Salle 5" },
+            { eleve: "CHARAT Joséphine Awa Michele", classe: "3EME2", parcours: "Parcours santé", problematique: "Qu'est-ce que la maladie de l'Alzheimer et en quoi mon expérience personnelle m'a-t-elle donné envie de devenir médecin?", d1: "SVT", d2: "HGEMC", j1: "Nathalie Mboup", j2: "Mathilde Michon Guillaume", heure: "11:30", salle: "Salle 4" },
+            { eleve: "D'ALMEIDA Asha", classe: "3EME2", parcours: "Parcours citoyen", problematique: "En quoi Petit Pays de Gaël FAYE montre que la guerre vole bien plus que des vies mais qu'elle vole aussi l'enfance ?", d1: "Français", d2: "Anglais", j1: "Nafissatou Fall", j2: "Elizabeth Porter", heure: "11:30", salle: "Salle 1" },
+            { eleve: "DE GAIGNERON JOLLIMON DEMAROLLES Pétronille Agnès Louis Marie", classe: "3EME1", parcours: "Parcours santé", problematique: "En quoi le stress influence-t-il nos résultats scolaires et notre santé ?", d1: "SVT", d2: "Aucune", j1: "Vincent David", j2: "Roselyne D’Aquino", heure: "11:30", salle: "Salle 2" },
+            { eleve: "DEMANGE Laura Sokhna", classe: "3EME2", parcours: "Parcours citoyen", problematique: "Nelson Mandela est-il devenu un symbole mondial de la lutte contre l'injustice et le racisme ?", d1: "HGEMC", d2: "Français", j1: "Claire Bossu", j2: "Fanelly Mourain Diop", heure: "11:30", salle: "Salle 3" },
+            { eleve: "DIAGNE Ndeye Awa", classe: "3EME2", parcours: "Parcours citoyen", problematique: "En quoi la traite négrière à durablement marquée l'histoire des populations noires et le monde actuel ?", d1: "HGEMC", d2: "Aucune", j1: "Yvon Thomas", j2: "Alain Gomis", heure: "11:30", salle: "Salle 5" },
+            { eleve: "DIALLO Djibril", classe: "3EME2", parcours: "Parcours avenir", problematique: "Comment bien comprendre à quoi sert la gestion du patrimoine?", d1: "HGEMC", d2: "Anglais", j1: "Mathilde Michon Guillaume", j2: "François Faye", heure: "12:00", salle: "Salle 1" },
+            { eleve: "DIALLO Ibrahima Sory", classe: "3EME2", parcours: "Parcours citoyen", problematique: "Comment le sport peut-il favoriser l'intégration sociale et lutter contre les inégalités ?", d1: "EPS", d2: "HGEMC", j1: "Claire Drame", j2: "Claire Bossu", heure: "12:00", salle: "Salle 3" },
+            { eleve: "DIENG Aïssatou", classe: "3EME1", parcours: "Parcours citoyen", problematique: "En quoi le témoignage d'Anne Frank permet-il de comprendre l'horreur de la Shoah et de la seconde guerre mondiale ?", d1: "HGEMC", d2: "Espagnol", j1: "Yvon Thomas", j2: "Fernando Piaggio", heure: "12:00", salle: "Salle 5" },
+            { eleve: "DIEYE Awa Cheikh", classe: "3EME1", parcours: "Histoire des arts", problematique: "Comment l'oeuvre d'Otto Dix montre -t-elle les horreurs de la première guerre mondiale?", d1: "HGEMC", d2: "Anglais", j1: "Claire Bossu", j2: "Layla Jaït", heure: "12:00", salle: "Salle 4" },
+            { eleve: "DIOP Oumou", classe: "3EME1", parcours: "Histoire des arts", problematique: "Pourquoi les artistes font-ils le choix de se représenter eux-mêmes dans leurs propres oeuvres?", d1: "Arts Plastiques", d2: "HGEMC", j1: "Eve Capel", j2: "Yvon Thomas", heure: "12:00", salle: "Salle 2" },
+            { eleve: "DIOUF Moussa", classe: "3EME1", parcours: "Parcours avenir", problematique: "En quoi mon stage d'immersion chez BAAMTU TECHNOLOGIES m'a-t-il ouvert les yeux sur les nouvelles manières de concevoir l'informatique ?", d1: "Technologie", d2: "Anglais", j1: "Antoine Frayon", j2: "Elizabeth Porter", heure: "12:30", salle: "Salle 3" },
+            { eleve: "FALL Adji Magatte", classe: "3EME2", parcours: "Parcours citoyen", problematique: "L'IA peut-elle améliorer l'apprentissage sans remplacer les efforts des élèves ?", d1: "Technologie", d2: "Anglais", j1: "Antoine Frayon", j2: "François Faye", heure: "12:30", salle: "Salle 2" },
+            { eleve: "FROUART Mia Tiara", classe: "3EME1", parcours: "Parcours citoyen", problematique: "Comment le musée MAHICAO participe-t-il à la conservation, à la transmission et à la valorisation des cultures africaines ?", d1: "Arts Plastiques", d2: "Anglais", j1: "Eve Capel", j2: "Layla Jaït", heure: "12:30", salle: "Salle 4" },
+            { eleve: "GAFFARI Sofia", classe: "3EME2", parcours: "Parcours avenir", problematique: "Pourquoi mon stage chez un vétérinaire m'a-t-il amené à reconsidérer mon choix de métier ?", d1: "Orientation", d2: "Anglais", j1: "Roselyne D’Aquino", j2: "Elizabeth Porter", heure: "12:30", salle: "Salle 5" },
+            { eleve: "GALAND Margaux Suzette", classe: "3EME1", parcours: "Parcours santé", problematique: "En quoi la reprise de la pratique sportive peut-elle améliroer la récupération physique et mentale après une leucémie ?", d1: "SVT", d2: "EPS", j1: "Vincent David", j2: "Alassane Ndiaye", heure: "12:30", salle: "Salle 1" },
+            { eleve: "GILLEN Mathieu Louis Pierre", classe: "3EME2", parcours: "Parcours avenir", problematique: "En quoi le tourisme pourrait-il être un levier pour une carrière internationale afin de découvrir lee monde et les gens?", d1: "HGEMC", d2: "Aucune", j1: "Mathilde Michon Guillaume", j2: "Alain Gomis", heure: "13:00", salle: "Salle 3" },
+            { eleve: "GLAUDE Manon", classe: "3EME1", parcours: "Parcours santé", problematique: "En quoi le sommeil est-il important dans la vie des adolescents ?", d1: "SVT", d2: "HGEMC", j1: "Nathalie Mboup", j2: "Yvon Thomas", heure: "13:00", salle: "Salle 4" },
+            { eleve: "GRASSAGLIATA Milena", classe: "3EME1", parcours: "Parcours santé", problematique: "En quoi une mauvaise nutrition impacte-t-elle la santé physique et mentale chez les jeunes ?", d1: "SVT", d2: "Français", j1: "Vincent David", j2: "Fanelly Mourain Diop", heure: "13:00", salle: "Salle 1" },
+            { eleve: "GROS-DUBOIS Daniella Fatoumata", classe: "3EME1", parcours: "Parcours santé", problematique: "En quoi la compréhension du cancer du sein et les différentes stratégies mises en oeuvre pour lutter contre cette maladie améliorent-elles l'espérance de vie ?", d1: "SVT", d2: "Espagnol", j1: "Nathalie Mboup", j2: "Amandine Gibus", heure: "13:00", salle: "Salle 2" },
+            { eleve: "HOUGNON Alexandre Georges", classe: "3EME2", parcours: "Parcours avenir", problematique: "Comment vais-je faire pour réussir mon rêve d'architecte ?", d1: "Arts Plastiques", d2: "Anglais", j1: "Eve Capel", j2: "François Faye", heure: "13:00", salle: "Salle 5" },
+            { eleve: "JABER Ali", classe: "3EME1", parcours: "Parcours avenir", problematique: "Comment mon stage à l'hôtel Royam m'a-t-il aider à mieux comprendre le monde du travail et mon futur métier ?", d1: "Français", d2: "Aucune", j1: "Olivier Baritou", j2: "Alain Gomis", heure: "13:30", salle: "Salle 4" },
+            { eleve: "KANE Souleymane", classe: "3EME2", parcours: "Parcours santé", problematique: "En quoi le canal carpien peut-il affecter la vie scolaire d'un élève ?", d1: "SVT", d2: "Aucune", j1: "Nathalie Mboup", j2: "Roselyne D’Aquino", heure: "13:30", salle: "Salle 2" },
+            { eleve: "KOUROUMA Marguerite", classe: "3EME2", parcours: "Parcours santé", problematique: "Quels sont les risques d'une grossesse précoce pour un élève ?", d1: "SVT", d2: "Aucune", j1: "Vincent David", j2: "Claire Drame", heure: "13:30", salle: "Salle 1" },
+            { eleve: "LE COM Solen", classe: "3EME2", parcours: "Parcours santé", problematique: "Comment des cigarettes éléctronqiues jetables peuvent-elles impacter le quotidien scolaire et habituel des adolescents ?", d1: "SVT", d2: "Aucune", j1: "Nathalie Mboup", j2: "Alain Gomis", heure: "13:30", salle: "Salle 5" },
+            { eleve: "LESAINT Samy Amet", classe: "3EME2", parcours: "Parcours santé", problematique: "Quelles sont les conséquences de la drépanocitose et comment affecte-t-elle la vie des patients?", d1: "SVT", d2: "Aucune", j1: "Vincent David", j2: "Roselyne D’Aquino", heure: "13:30", salle: "Salle 3" },
+            { eleve: "LOZES Raphaël André Dominique", classe: "3EME2", parcours: "Parcours avenir", problematique: "Comment devenir agriculteur aujourd'hui et pourquoi choisir ce métier?", d1: "SVT", d2: "Aucune", j1: "Nathalie Mboup", j2: "Claire Drame", heure: "14:00", salle: "Salle 4" },
+            { eleve: "MARCHESE Howard Giovanni Sédar", classe: "3EME1", parcours: "Parcours avenir", problematique: "Pourquoi le métier de pilote fait-il encore réver aujourd'hui?", d1: "Orientation", d2: "Mathématiques", j1: "Roselyne D’Aquino", j2: "Karine Chabert", heure: "14:00", salle: "Salle 1" },
+            { eleve: "MARTINEZ Gabriel-Omar Régis", classe: "3EME1", parcours: "Parcours santé", problematique: "Selon vous, pourquoi les drogues ont-elles un effet néfaste sur la santé et le comportement des adolescents?", d1: "SVT", d2: "Français", j1: "Vincent David", j2: "Nafissatou Fall", heure: "14:00", salle: "Salle 2" },
+            { eleve: "MBOUP Adam Fallou", classe: "3EME1", parcours: "Parcours santé", problematique: "En quoi les progrès scientifiques et technologiques aident-ils les sportifs ?", d1: "Technologie", d2: "EPS", j1: "Antoine Frayon", j2: "Alassane Ndiaye", heure: "14:00", salle: "Salle 3" },
+            { eleve: "MBOW Aïssatou", classe: "3EME2", parcours: "Parcours avenir", problematique: "En quoi l'environnement des jeunes d'aujourd'hui influence-t-il leur orientation pour la médecine ?", d1: "Français", d2: "Anglais", j1: "Fanelly Mourain Diop", j2: "Elizabeth Porter", heure: "14:00", salle: "Salle 5" },
+            { eleve: "MENCIERE Théophane Sedar", classe: "3EME2", parcours: "Parcours avenir", problematique: "Comment le parcours avenir peut-il nous aider à réfléchir à notre orientation ?", d1: "Français", d2: "Aucune", j1: "Olivier Baritou", j2: "Alain Gomis", heure: "14:30", salle: "Salle 4" },
+            { eleve: "MENDY BOSSU Mia Caroline Michele", classe: "3EME1", parcours: "Parcours citoyen", problematique: "En quoi le journal d'Anne Frank est-il un acte de résistance et un symbole du devoir de mémoire?", d1: "HGEMC", d2: "Français", j1: "Mathilde Michon Guillaume", j2: "Nafissatou Fall", heure: "14:30", salle: "Salle 1" },
+            { eleve: "MLIK Omar", classe: "3EME1", parcours: "Parcours avenir", problematique: "En quoi le parcours scolaire influence-t-il notre futur et quelle est son importance ?", d1: "Français", d2: "Anglais", j1: "Fanelly Mourain Diop", j2: "François Faye", heure: "14:30", salle: "Salle 3" },
+            { eleve: "MOCNIK Léa Absa", classe: "3EME2", parcours: "Parcours citoyen", problematique: "Et si le harcèlemeent scolaire n'était pas seulement l'histoire d'un bourreau et d'une victime mais le symptôme d'une société qui ferme les yeux?", d1: "HGEMC", d2: "Anglais", j1: "Claire Bossu", j2: "Elizabeth Porter", heure: "14:30", salle: "Salle 5" },
+            { eleve: "MONTALBANO Nathalie Marie Olga", classe: "3EME1", parcours: "Parcours avenir", problematique: "Comment mon stage m'a t-il orienté pour mon projet futur ?", d1: "Orientation", d2: "Espagnol", j1: "Roselyne D’Aquino", j2: "Amandine Gibus", heure: "14:30", salle: "Salle 2" },
+            { eleve: "NDIAYE Anna Florence", classe: "3EME1", parcours: "Parcours citoyen", problematique: "En quoi l'esclavage a-t-il marqué l'histoire ?", d1: "HGEMC", d2: "Anglais", j1: "Yvon Thomas", j2: "Layla Jaït", heure: "15:00", salle: "Salle 4" },
+            { eleve: "NDIAYE Soukaïna Dibor", classe: "3EME2", parcours: "Parcours avenir", problematique: "En quoi la médecine de permet de prévenir les risques et d'améliorer les performances des sportifs ?", d1: "SVT", d2: "EPS", j1: "Nathalie Mboup", j2: "Claire Drame", heure: "15:00", salle: "Salle 2" },
+            { eleve: "NGOM Khady Meissa", classe: "3EME1", parcours: "Parcours citoyen", problematique: "En quoi les réseaux sociaux influencent-ils le quotidien des adolescents?", d1: "HGEMC", d2: "Anglais", j1: "Mathilde Michon Guillaume", j2: "François Faye", heure: "15:00", salle: "Salle 5" },
+            { eleve: "NOUHANDO ROD Ezechiel Gildas", classe: "3EME1", parcours: "Parcours avenir", problematique: "Comment le montage vidéo peut-il devenir un moyen de gagner de l'argent grâce aux réseaux sociaux et à internet ?", d1: "Technologie", d2: "Français", j1: "Antoine Frayon", j2: "Olivier Baritou", heure: "15:00", salle: "Salle 3" },
+            { eleve: "NUSS Paulette Thiaba", classe: "3EME1", parcours: "Parcours citoyen", problematique: "Pourquoi les femmes continuent-elles de subir les inégalités malgré l'existence de lois qui protègent leurs droits ?", d1: "HGEMC", d2: "Français", j1: "Claire Bossu", j2: "Fanelly Mourain Diop", heure: "15:00", salle: "Salle 1" },
+            { eleve: "PEREZ NGOLI Micah Bruno Jean-Jacques", classe: "3EME1", parcours: "Parcours avenir", problematique: "Comment le stage m'a aidé à trouver mon futur métier et comment pourrais-je répondre aux besoins des consommateurs ?", d1: "Français", d2: "Orientation", j1: "Nafissatou Fall", j2: "Roselyne D’Aquino", heure: "15:30", salle: "Salle 4" },
+            { eleve: "PHILIPPE Paloma Clémence", classe: "3EME2", parcours: "Histoire des arts / Citoyen", problematique: "Avoir un style vestimentaire particulier, affecte-t-il la vision que la société porte envers nous ?", d1: "Arts Plastiques", d2: "Anglais", j1: "Eve Capel", j2: "Elizabeth Porter", heure: "15:30", salle: "Salle 2" },
+            { eleve: "PORQUET Yaniss", classe: "3EME1", parcours: "Parcours avenir", problematique: "En quoi mon stage m'a-t-il permis de mieux comprendre les métiers de l'énergie ?", d1: "Orientation", d2: "Physique-chimie", j1: "Roselyne D’Aquino", j2: "Adama Ndaw", heure: "15:30", salle: "Salle 5" },
+            { eleve: "REZGANI Yasmine", classe: "3EME2", parcours: "Parcours santé", problematique: "Comment le manque de sommeil influence-t-il sur nos capacités d'apprentissage et notre santé mentale ?", d1: "SVT", d2: "Aucune", j1: "Vincent David", j2: "Alain Gomis", heure: "15:30", salle: "Salle 1" },
+            { eleve: "SALL Arona Ababacar Alpha", classe: "3EME2", parcours: "Parcours santé", problematique: "En quoi la pratique régulière d'une activité physique régulière est-elle essentielle à la santé globale du collégien ?", d1: "EPS", d2: "Anglais", j1: "Alassane Ndiaye", j2: "François Faye", heure: "15:30", salle: "Salle 3" },
+            { eleve: "SAMB Abdou Aziz", classe: "3EME1", parcours: "Parcours avenir", problematique: "Comment mon stage de 3ème et le parcours avenir m'ont permis d'amorcer une réflexion autour du métier de psychologue?", d1: "Français", d2: "Orientation", j1: "Olivier Baritou", j2: "Roselyne D’Aquino", heure: "16:00", salle: "Salle 2" },
+            { eleve: "SARR Fatou Bintou", classe: "3EME2", parcours: "Histoire des arts", problematique: "Comment la chanson stand up rend-elle hommage à la lutee de Harriet Tubman et comment nous incite-t-elle à nous défendre contre les injustices d'aujourd'hui?", d1: "Éducation musicale", d2: "Anglais", j1: "Antoine Diandy", j2: "Layla Jaït", heure: "16:00", salle: "Salle 5" },
+            { eleve: "TEBER Nehir", classe: "3EME1", parcours: "Parcours citoyen", problematique: "En quoi les réseaux sociaux ont-ils un impact sur le quotidien des jeunes aujourd'hui ?", d1: "Technologie", d2: "HGEMC", j1: "Antoine Frayon", j2: "Yvon Thomas", heure: "16:00", salle: "Salle 4" },
+            { eleve: "TUNA Melisa", classe: "3EME2", parcours: "PEAC", problematique: "En quoi la mythologie grecque reste-t-elle influente sur le monde moderne ?", d1: "Français", d2: "HGEMC", j1: "Fanelly Mourain Diop", j2: "Claire Bossu", heure: "16:00", salle: "Salle 3" },
+            { eleve: "VILLAIN Candice Noa", classe: "3EME2", parcours: "Parcours santé", problematique: "Quels sont les troubles DYS, quelles sont leurs difficultés et quelles sont les aides mises en place à l'école afin dee palier à ces difficultés?", d1: "SVT", d2: "Anglais", j1: "Nathalie Mboup", j2: "Elizabeth Porter", heure: "16:00", salle: "Salle 1" },
+            { eleve: "WONE Aissatou Rahmatoulahi", classe: "3EME2", parcours: "Parcours santé", problematique: "En quoi mon stage au district sanitaire de Mbour m'a-t-il permis de comprendre le système de santé Sénégalais et de confirmer mon projet professionnel dans le domaine médical ?", d1: "Orientation", d2: "Anglais", j1: "Roselyne D’Aquino", j2: "François Faye", heure: "16:30", salle: "Salle 2" },
+            { eleve: "YEROCHEWSKI Yelen Sophie Marie", classe: "3EME1", parcours: "Parcours citoyen", problematique: "Comment la propagande de Adolf Hitler a-t-elle influencé la population Allemande ?", d1: "HGEMC", d2: "Espagnol", j1: "Yvon Thomas", j2: "Fernando Piaggio", heure: "16:30", salle: "Salle 5" }
+        ];
+
+        // Variables Globales
+        let filteredData = [...rawData];
+        let sortDirectionGlobal = 1;
+
+        /* ========================================================= */
+        /* LOGIQUE DE NAVIGATION DES ONGLETS                         */
+        /* ========================================================= */
+        function switchTab(tabId) {
+            const tabs = ['global', 'jures', 'eleves'];
+            tabs.forEach(id => {
+                const view = document.getElementById('view-' + id);
+                const btn = document.getElementById('tab-' + id);
+                
+                if (id === tabId) {
+                    view.classList.remove('hidden');
+                    view.classList.add('block');
+                    btn.className = "border-indigo-500 text-indigo-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors flex items-center gap-2";
+                } else {
+                    view.classList.remove('block');
+                    view.classList.add('hidden');
+                    btn.className = "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors flex items-center gap-2";
+                }
+            });
+        }
+
+        /* ========================================================= */
+        /* LOGIQUE ONGLET : PLANNING GLOBAL                          */
+        /* ========================================================= */
+        function getParcoursColor(parcours) {
+            const p = parcours.toLowerCase();
+            if (p.includes('santé')) return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+            if (p.includes('citoyen')) return 'bg-blue-100 text-blue-800 border-blue-200';
+            if (p.includes('avenir')) return 'bg-purple-100 text-purple-800 border-purple-200';
+            if (p.includes('arts')) return 'bg-amber-100 text-amber-800 border-amber-200';
+            if (p.includes('peac')) return 'bg-pink-100 text-pink-800 border-pink-200';
+            return 'bg-gray-100 text-gray-800 border-gray-200';
+        }
+
+        function renderGlobalTable(data) {
+            const tbody = document.getElementById('globalTableBody');
+            const noResults = document.getElementById('noResults');
+            
+            tbody.innerHTML = '';
+            
+            if (data.length === 0) {
+                noResults.classList.remove('hidden');
+                return;
+            } else {
+                noResults.classList.add('hidden');
+            }
+
+            data.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 transition-colors page-break-inside-avoid';
+                
+                tr.innerHTML = `
+                    <td class="px-6 py-4 print:py-2 whitespace-nowrap">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-sm font-medium bg-slate-100 text-slate-800">
+                            <i class="far fa-clock mr-1.5 text-slate-400"></i> ${item.heure}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 print:py-2 whitespace-nowrap">
+                        <span class="text-sm font-medium text-slate-700">${item.salle}</span>
+                    </td>
+                    <td class="px-6 py-4 print:py-2">
+                        <div class="text-sm font-bold text-indigo-700">${item.eleve}</div>
+                    </td>
+                    <td class="px-6 py-4 print:py-2 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-slate-100 text-slate-600 border border-slate-200">${item.classe}</span>
+                    </td>
+                    <td class="px-6 py-4 print:py-2">
+                        <div class="mb-2">
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-md border ${getParcoursColor(item.parcours)}">
+                                ${item.parcours}
+                            </span>
+                        </div>
+                        <div class="text-sm text-slate-600 italic">« ${item.problematique} »</div>
+                    </td>
+                    <td class="px-6 py-4 print:py-2 text-sm">
+                        <div class="flex flex-col gap-1">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-user-tie text-slate-400"></i>
+                                <span><span class="font-medium text-slate-800">${item.j1}</span> <span class="text-xs text-slate-500">(${item.d1})</span></span>
+                            </div>
+                            ${item.j2 !== 'Aucune' && item.j2 ? `
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-user-tie text-slate-400"></i>
+                                <span><span class="font-medium text-slate-800">${item.j2}</span> <span class="text-xs text-slate-500">(${item.d2})</span></span>
+                            </div>` : ''}
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function populateGlobalFilters() {
+            const classes = [...new Set(rawData.map(item => item.classe))].sort();
+            const parcours = [...new Set(rawData.map(item => item.parcours))].sort();
+            const salles = [...new Set(rawData.map(item => item.salle))].sort();
+
+            const addOptions = (selectId, items) => {
+                const select = document.getElementById(selectId);
+                items.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item;
+                    option.textContent = item;
+                    select.appendChild(option);
+                });
+            }
+
+            addOptions('filterClasse', classes);
+            addOptions('filterParcours', parcours);
+            addOptions('filterSalle', salles);
+        }
+
+        function updateGlobalStats(data) {
+            document.getElementById('stat-total').textContent = data.length;
+            document.getElementById('stat-salles').textContent = new Set(data.map(i => i.salle)).size;
+            
+            const jures = new Set();
+            data.forEach(i => {
+                if(i.j1) jures.add(i.j1);
+                if(i.j2 && i.j2 !== 'Aucune') jures.add(i.j2);
+            });
+            document.getElementById('stat-jures').textContent = jures.size;
+            
+            document.getElementById('stat-parcours').textContent = new Set(data.map(i => i.parcours)).size;
+        }
+
+        function applyGlobalFilters() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const classe = document.getElementById('filterClasse').value;
+            const parcours = document.getElementById('filterParcours').value;
+            const salle = document.getElementById('filterSalle').value;
+
+            filteredData = rawData.filter(item => {
+                const matchSearch = item.eleve.toLowerCase().includes(search) || 
+                                  item.problematique.toLowerCase().includes(search) ||
+                                  item.j1.toLowerCase().includes(search) ||
+                                  (item.j2 && item.j2.toLowerCase().includes(search));
+                
+                const matchClasse = classe === '' || item.classe === classe;
+                const matchParcours = parcours === '' || item.parcours === parcours;
+                const matchSalle = salle === '' || item.salle === salle;
+
+                return matchSearch && matchClasse && matchParcours && matchSalle;
+            });
+
+            renderGlobalTable(filteredData);
+            updateGlobalStats(filteredData);
+        }
+
+        function sortGlobalTable(column) {
+            filteredData.sort((a, b) => {
+                let valA = a[column];
+                let valB = b[column];
+                
+                if (column === 'heure') {
+                    valA = parseInt(valA.replace(':', ''));
+                    valB = parseInt(valB.replace(':', ''));
+                } else if(column === 'salle') {
+                    valA = parseInt(valA.replace('Salle ', '')) || valA;
+                    valB = parseInt(valB.replace('Salle ', '')) || valB;
+                }
+                
+                if (valA < valB) return -1 * sortDirectionGlobal;
+                if (valA > valB) return 1 * sortDirectionGlobal;
+                return 0;
+            });
+            
+            sortDirectionGlobal *= -1;
+            renderGlobalTable(filteredData);
+        }
+
+        /* ========================================================= */
+        /* LOGIQUE ONGLET : CONVOCATIONS JURÉS                       */
+        /* ========================================================= */
+        
+        function populateJureSelect() {
+            const select = document.getElementById('jureSelect');
+            const jures = new Set();
+            
+            rawData.forEach(item => {
+                if(item.j1) jures.add(item.j1);
+                if(item.j2 && item.j2 !== 'Aucune') jures.add(item.j2);
+            });
+            
+            const juresArray = Array.from(jures).sort();
+            
+            juresArray.forEach(jure => {
+                const option = document.createElement('option');
+                option.value = jure;
+                option.textContent = jure;
+                select.appendChild(option);
+            });
+        }
+
+        function generateJureHTML(jureName) {
+            const orauxJure = rawData.filter(item => item.j1 === jureName || item.j2 === jureName);
+            orauxJure.sort((a, b) => parseInt(a.heure.replace(':', '')) - parseInt(b.heure.replace(':', '')));
+
+            const sallesDistinctes = [...new Set(orauxJure.map(o => o.salle))].join(', ');
+            
+            let html = `
+            <div class="bg-white p-10 print:p-4 rounded-xl shadow-sm print:shadow-none border border-slate-200 print:border-none mx-auto max-w-4xl mb-8 print:mb-0 page-break">
+                <!-- En-tête -->
+                <div class="mb-8 print:mb-2 border-b-2 border-indigo-500 pb-4 print:pb-1 flex justify-between items-start">
+                    <div>
+                        <img src="https://i.imgur.com/0YmGlXO.png" alt="Logo Établissement" class="h-20 print:h-10 mb-4 print:mb-1 object-contain">
+                        <p class="text-sm print:text-xs text-slate-500 font-bold uppercase tracking-wider mb-1 print:mb-0">Convocation Jury - Oraux DNB</p>
+                        <h2 class="text-3xl print:text-xl font-bold text-slate-800">${jureName}</h2>
+                    </div>
+                    <div class="text-right text-sm print:text-xs text-slate-600">
+                        <p>Session 2026</p>
+                    </div>
+                </div>
+
+                <!-- Statistiques individuelles du Juré -->
+                <div class="grid grid-cols-2 gap-4 mb-8 print:mb-3">
+                    <div class="bg-slate-50 p-4 print:p-2 rounded-lg border border-slate-100">
+                        <p class="text-sm print:text-xs text-slate-500 mb-1 print:mb-0">Nombre d'oraux à évaluer</p>
+                        <p class="text-2xl print:text-lg font-bold text-indigo-600 leading-none">${orauxJure.length}</p>
+                    </div>
+                    <div class="bg-slate-50 p-4 print:p-2 rounded-lg border border-slate-100">
+                        <p class="text-sm print:text-xs text-slate-500 mb-1 print:mb-0">Salle(s) affectée(s)</p>
+                        <p class="text-xl print:text-base font-bold text-slate-800 leading-none">${sallesDistinctes}</p>
+                    </div>
+                </div>
+
+                <!-- Tableau du planning du juré -->
+                <div class="overflow-x-auto border border-slate-200 rounded-lg">
+                    <table class="min-w-full divide-y divide-slate-200">
+                        <thead class="bg-slate-100">
+                            <tr>
+                                <th class="px-6 py-3 print:px-3 print:py-1.5 text-left text-xs print:text-[10px] font-semibold text-slate-600 uppercase">Heure</th>
+                                <th class="px-6 py-3 print:px-3 print:py-1.5 text-left text-xs print:text-[10px] font-semibold text-slate-600 uppercase">Salle</th>
+                                <th class="px-6 py-3 print:px-3 print:py-1.5 text-left text-xs print:text-[10px] font-semibold text-slate-600 uppercase">Élève</th>
+                                <th class="px-6 py-3 print:px-3 print:py-1.5 text-left text-xs print:text-[10px] font-semibold text-slate-600 uppercase w-1/3">Parcours & Problématique</th>
+                                <th class="px-6 py-3 print:px-3 print:py-1.5 text-left text-xs print:text-[10px] font-semibold text-slate-600 uppercase">Votre Rôle</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-slate-200">
+            `;
+
+            orauxJure.forEach(item => {
+                let role = "";
+                let coJure = "";
+                
+                if (item.j1 === jureName) {
+                    role = '<span class="font-bold text-indigo-600">Juré 1</span>';
+                    coJure = (item.j2 && item.j2 !== 'Aucune') ? `(avec ${item.j2})` : '(Seul)';
+                } else if (item.j2 === jureName) {
+                    role = '<span class="font-bold text-emerald-600">Juré 2</span>';
+                    coJure = `(avec ${item.j1})`;
+                }
+
+                html += `
+                            <tr>
+                                <td class="px-6 py-4 print:px-3 print:py-2 whitespace-nowrap font-medium text-slate-800 print:text-xs">${item.heure}</td>
+                                <td class="px-6 py-4 print:px-3 print:py-2 whitespace-nowrap text-sm print:text-xs text-slate-600">${item.salle}</td>
+                                <td class="px-6 py-4 print:px-3 print:py-2">
+                                    <div class="font-bold text-slate-800 print:text-xs leading-tight">${item.eleve}</div>
+                                    <div class="text-xs print:text-[10px] text-slate-500">${item.classe}</div>
+                                </td>
+                                <td class="px-6 py-4 print:px-3 print:py-2 text-sm print:text-xs">
+                                    <div class="font-medium text-slate-700 mb-1 print:mb-0.5 leading-tight">${item.parcours}</div>
+                                    <div class="text-xs print:text-[10px] text-slate-500 italic leading-snug print:leading-tight">« ${item.problematique} »</div>
+                                </td>
+                                <td class="px-6 py-4 print:px-3 print:py-2 text-sm print:text-xs leading-tight">
+                                    ${role} <br> <span class="text-xs print:text-[10px] text-slate-500">${coJure}</span>
+                                </td>
+                            </tr>
+                `;
+            });
+
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Signature Principal -->
+                <div class="mt-12 print:mt-4 flex justify-end">
+                    <div class="text-center">
+                        <p class="font-medium text-slate-800 mb-2 print:mb-0 print:text-xs">Le Principal,</p>
+                        <p class="text-slate-600 text-sm mb-2 print:mb-0 print:text-xs">Bastien CAPEL</p>
+                        <img src="https://i.imgur.com/77DP4od.png" alt="Signature Principal" class="h-24 print:h-12 mx-auto object-contain mix-blend-multiply">
+                    </div>
+                </div>
+            </div>
+            `;
+
+            return html;
+        }
+
+        function printAllJures() {
+            document.getElementById('jureSelect').value = '';
+            
+            const container = document.getElementById('jurePrintContainer');
+            const emptyState = document.getElementById('jureEmptyState');
+            
+            container.classList.remove('hidden');
+            emptyState.classList.add('hidden');
+
+            const jures = new Set();
+            rawData.forEach(item => {
+                if(item.j1) jures.add(item.j1);
+                if(item.j2 && item.j2 !== 'Aucune') jures.add(item.j2);
+            });
+            const juresArray = Array.from(jures).sort();
+
+            let html = '';
+            juresArray.forEach(jure => {
+                html += generateJureHTML(jure);
+            });
+            
+            container.innerHTML = html;
+            setTimeout(() => { window.print(); }, 500);
+        }
+
+        document.getElementById('jureSelect').addEventListener('change', function(e) {
+            const jureName = e.target.value;
+            const container = document.getElementById('jurePrintContainer');
+            const emptyState = document.getElementById('jureEmptyState');
+            
+            if (!jureName) {
+                container.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            container.classList.remove('hidden');
+            emptyState.classList.add('hidden');
+            container.innerHTML = generateJureHTML(jureName);
+        });
+
+        /* ========================================================= */
+        /* LOGIQUE ONGLET : CONVOCATIONS ÉLÈVES                      */
+        /* ========================================================= */
+
+        function populateEleveSelect() {
+            const select = document.getElementById('eleveSelect');
+            const elevesSorted = [...rawData].sort((a, b) => a.eleve.localeCompare(b.eleve));
+            
+            elevesSorted.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.eleve;
+                option.textContent = `${item.eleve} (${item.classe})`;
+                select.appendChild(option);
+            });
+        }
+
+        function generateEleveHTML(item) {
+            return `
+            <div class="bg-white p-10 print:p-6 rounded-xl shadow-sm print:shadow-none border border-slate-200 print:border-none mx-auto max-w-3xl mb-8 print:mb-0 page-break">
+                <div class="flex justify-between items-start mb-8 print:mb-4">
+                    <img src="https://i.imgur.com/0YmGlXO.png" alt="Logo Établissement" class="h-24 print:h-16 object-contain">
+                    <div class="text-right text-sm text-slate-600 font-medium">
+                        <p>Année scolaire 2025-2026</p>
+                        <p>Épreuve Orale du DNB</p>
+                    </div>
+                </div>
+                
+                <h1 class="text-2xl print:text-xl font-bold text-center text-slate-800 mb-10 print:mb-6 uppercase tracking-widest border-b-2 border-slate-800 pb-4 print:pb-2">
+                    Convocation à l'épreuve orale
+                </h1>
+                
+                <div class="mb-8 print:mb-4 text-lg print:text-base">
+                    <p class="mb-4 print:mb-2">L'élève <span class="font-bold text-xl print:text-lg text-indigo-700">${item.eleve}</span> (Classe : <span class="font-bold">${item.classe}</span>)</p>
+                    <p class="mb-4 print:mb-2">Est convoqué(e) pour présenter l'épreuve orale du Diplôme National du Brevet concernant le domaine suivant :</p>
+                    
+                    <div class="bg-slate-50 p-6 print:p-4 rounded-lg border border-slate-200 mb-6 print:mb-4">
+                        <p class="text-sm text-slate-500 uppercase font-bold mb-1">Parcours / Thème choisi</p>
+                        <p class="font-medium text-lg print:text-base mb-4 print:mb-2 text-indigo-800">${item.parcours}</p>
+                        
+                        <p class="text-sm text-slate-500 uppercase font-bold mb-1">Sujet / Problématique</p>
+                        <p class="font-medium italic text-slate-800">« ${item.problematique} »</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4 bg-indigo-50 p-6 print:p-4 rounded-lg border border-indigo-100">
+                        <div>
+                            <p class="text-sm text-indigo-600 uppercase font-bold mb-1">Heure de passage</p>
+                            <p class="font-bold text-2xl print:text-xl text-slate-800">${item.heure}</p>
+                            <p class="text-xs text-slate-500 mt-1">Présence requise 15 min avant l'heure indiquée.</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-indigo-600 uppercase font-bold mb-1">Salle d'examen</p>
+                            <p class="font-bold text-2xl print:text-xl text-slate-800">${item.salle}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 print:mt-4 text-sm text-slate-600 border-l-4 border-amber-400 pl-4 py-3 print:py-2 bg-amber-50">
+                        <p class="font-bold mb-1 text-amber-800"><i class="fas fa-exclamation-triangle mr-1"></i> Rappel important :</p>
+                        <p>Le candidat doit obligatoirement se présenter muni de sa <strong>pièce d'identité</strong> (carte d'identité, passeport) et de cette convocation. Aucun retard ne sera toléré.</p>
+                    </div>
+                </div>
+                
+                <div class="mt-12 print:mt-6 flex justify-end">
+                    <div class="text-center">
+                        <p class="font-medium text-slate-800 mb-2 print:mb-1">Le Principal,</p>
+                        <p class="text-slate-600 text-sm mb-2 print:mb-1">Bastien CAPEL</p>
+                        <img src="https://i.imgur.com/77DP4od.png" alt="Signature Principal" class="h-24 print:h-16 mx-auto object-contain mix-blend-multiply">
+                    </div>
+                </div>
+            </div>
+            `;
+        }
+
+        document.getElementById('eleveSelect').addEventListener('change', function(e) {
+            const selectedEleveName = e.target.value;
+            const container = document.getElementById('elevePrintContainer');
+            const emptyState = document.getElementById('eleveEmptyState');
+            
+            if (!selectedEleveName) {
+                container.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            container.classList.remove('hidden');
+            emptyState.classList.add('hidden');
+
+            const item = rawData.find(d => d.eleve === selectedEleveName);
+            container.innerHTML = generateEleveHTML(item);
+        });
+
+        function printAllEleves() {
+            document.getElementById('eleveSelect').value = '';
+            
+            const container = document.getElementById('elevePrintContainer');
+            const emptyState = document.getElementById('eleveEmptyState');
+            
+            container.classList.remove('hidden');
+            emptyState.classList.add('hidden');
+
+            const elevesSorted = [...rawData].sort((a, b) => {
+                if(a.classe === b.classe) return a.eleve.localeCompare(b.eleve);
+                return a.classe.localeCompare(b.classe);
+            });
+
+            let html = '';
+            elevesSorted.forEach(item => {
+                html += generateEleveHTML(item);
+            });
+            
+            container.innerHTML = html;
+            setTimeout(() => { window.print(); }, 500);
+        }
+
+        /* ========================================================= */
+        /* INITIALISATION                                            */
+        /* ========================================================= */
+        
+        document.getElementById('searchInput').addEventListener('input', applyGlobalFilters);
+        document.getElementById('filterClasse').addEventListener('change', applyGlobalFilters);
+        document.getElementById('filterParcours').addEventListener('change', applyGlobalFilters);
+        document.getElementById('filterSalle').addEventListener('change', applyGlobalFilters);
+
+        window.onload = () => {
+            populateGlobalFilters();
+            renderGlobalTable(rawData);
+            updateGlobalStats(rawData);
+            
+            populateJureSelect();
+            populateEleveSelect();
+            
+            // Forcer l'affichage du premier onglet au chargement
+            switchTab('global');
+        };
+    </script>
+</body>
+</html>
