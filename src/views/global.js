@@ -109,8 +109,10 @@ function populateGlobalFilters() {
 }
 
 function updateGlobalStats(data) {
-    document.getElementById('stat-total').textContent = data.length;
-    document.getElementById('stat-salles').textContent = new Set(data.map(i => i.salle)).size;
+    const realEleves = data.filter(item => item.eleve !== "Coordination Générale" && item.eleve !== "Mission Spéciale");
+
+    document.getElementById('stat-total').textContent = realEleves.length;
+    document.getElementById('stat-salles').textContent = new Set(realEleves.map(i => i.salle)).size;
     
     const jures = new Set();
     data.forEach(i => {
@@ -118,7 +120,7 @@ function updateGlobalStats(data) {
         if(i.j2 && i.j2 !== 'Aucune') jures.add(i.j2);
     });
     document.getElementById('stat-jures').textContent = jures.size;
-    document.getElementById('stat-parcours').textContent = new Set(data.map(i => i.parcours)).size;
+    document.getElementById('stat-parcours').textContent = new Set(realEleves.map(i => i.parcours)).size;
 }
 
 function applyGlobalFilters() {
