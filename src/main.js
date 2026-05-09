@@ -3,7 +3,6 @@ import { initGlobalView } from './views/global.js';
 import { initJuresView } from './views/jures.js';
 import { initElevesView } from './views/eleves.js';
 import { initGrillesView } from './views/grilles.js';
-import './style.css';
 
 document.addEventListener('DOMContentLoaded', () => {
     // Initialisation des vues avec les données

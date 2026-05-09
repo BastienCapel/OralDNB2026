@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tableau de Bord - Oraux de Brevet</title>
     <!-- Favicone -->
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="./public/favicon.png">
     
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Chargement direct du CSS pour la compatibilité avec Github Pages (sans Vite build) -->
+    <link rel="stylesheet" href="./src/style.css">
 </head>
 <body>
 
@@ -288,6 +290,6 @@
     </main>
 
     <!-- Point d'entrée de l'application -->
-    <script type="module" src="/src/main.js"></script>
+    <script type="module" src="./src/main.js"></script>
 </body>
 </html>
