@@ -50,13 +50,13 @@ export function initReglementView() {
                         <div class="highlight-box" style="padding: 1rem;">
                             <p class="font-bold text-sm mb-2">Présentation individuelle (15 min) :</p>
                             <ul class="text-sm mb-4">
-                                <li>• ~5 min d’exposé</li>
-                                <li>• ~10 min d’entretien</li>
+                                <li>~5 min d’exposé</li>
+                                <li>~10 min d’entretien</li>
                             </ul>
                             <p class="font-bold text-sm mb-2">Présentation collective (25 min) :</p>
                             <ul class="text-sm">
-                                <li>• 10 min d’exposé</li>
-                                <li>• 15 min d’entretien</li>
+                                <li>10 min d’exposé</li>
+                                <li>15 min d’entretien</li>
                             </ul>
                         </div>
                     </section>
@@ -128,19 +128,19 @@ export function initReglementView() {
                         <div class="info-box" style="padding: 1rem;">
                             <p class="font-bold text-xs uppercase text-primary mb-2">Forme (8 pts)</p>
                             <ul class="text-xs text-muted space-y-1">
-                                <li>• Expression claire</li>
-                                <li>• Vocabulaire précis</li>
-                                <li>• Structure du propos</li>
-                                <li>• Réponse aux questions</li>
+                                <li>Expression claire</li>
+                                <li>Vocabulaire précis</li>
+                                <li>Structure du propos</li>
+                                <li>Réponse aux questions</li>
                             </ul>
                         </div>
                         <div class="info-box" style="padding: 1rem;">
                             <p class="font-bold text-xs uppercase text-primary mb-2">Fond (12 pts)</p>
                             <ul class="text-xs text-muted space-y-1">
-                                <li>• Explication du projet</li>
-                                <li>• Connaissances acquises</li>
-                                <li>• Analyse de la démarche</li>
-                                <li>• Regard critique</li>
+                                <li>Explication du projet</li>
+                                <li>Connaissances acquises</li>
+                                <li>Analyse de la démarche</li>
+                                <li>Regard critique</li>
                             </ul>
                         </div>
                     </div>
