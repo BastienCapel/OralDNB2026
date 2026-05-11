@@ -564,6 +564,43 @@ tbody tr:hover {
     .print-signature img { height: 6.5rem; }
 }
 
+/* Reglement Styles */
+.reglement-content {
+    line-height: 1.6;
+    color: var(--text-main);
+}
+.reglement-content section {
+    margin-bottom: 2rem;
+}
+.reglement-content h3 {
+    display: flex;
+    align-items: center;
+}
+.reglement-content ul {
+    margin-left: 1.5rem;
+    margin-bottom: 1rem;
+}
+.reglement-content li {
+    margin-bottom: 0.5rem;
+}
+.reglement-content hr {
+    border: none;
+    border-top: 1px solid var(--border-color);
+    margin: 2rem 0;
+}
+.list-decimal { list-style-type: decimal; }
+.list-disc { list-style-type: disc; }
+.my-8 { margin-top: 2rem; margin-bottom: 2rem; }
+.mb-8 { margin-bottom: 2rem; }
+.mb-4 { margin-bottom: 1rem; }
+.mb-3 { margin-bottom: 0.75rem; }
+.mb-2 { margin-bottom: 0.5rem; }
+.mr-2 { margin-right: 0.5rem; }
+.space-y-2 > * + * { margin-top: 0.5rem; }
+.space-y-1 > * + * { margin-top: 0.25rem; }
+.pl-5 { padding-left: 1.25rem; }
+.opacity-20 { opacity: 0.2; }
+
 /* Mobile Responsive */
 @media (max-width: 768px) {
     .navbar h1 { font-size: 1.125rem; }

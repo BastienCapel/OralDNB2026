@@ -3,6 +3,7 @@ import { initGlobalView } from './views/global.js';
 import { initJuresView } from './views/jures.js';
 import { initElevesView } from './views/eleves.js';
 import { initGrillesView } from './views/grilles.js';
+import { initReglementView } from './views/reglement.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     // Initialisation des vues avec les données
@@ -10,9 +11,10 @@ document.addEventListener('DOMContentLoaded', () => {
     initJuresView(rawData);
     initElevesView(rawData);
     initGrillesView(rawData);
+    initReglementView();
 
     // Gestion du système d'onglets
-    const tabs = ['global', 'jures', 'eleves', 'grilles'];
+    const tabs = ['global', 'jures', 'eleves', 'grilles', 'reglement'];
     
     window.switchTab = function(tabId) {
         tabs.forEach(id => {
