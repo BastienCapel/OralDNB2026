@@ -59,7 +59,7 @@ function generateJureHTML(jureName) {
             </div>
             <div class="print-meta">
                 <p>Session 2026</p>
-                <p><strong>mercredi 21 mai 2026</strong></p>
+                <p><strong>mercredi 20 mai 2026</strong></p>
             </div>
         </div>
 
@@ -76,7 +76,7 @@ function generateJureHTML(jureName) {
 
         <div class="warning-box" style="margin-bottom: 1.5rem;">
             <p><strong><i class="fas fa-exclamation-circle"></i> Consignes importantes :</strong></p>
-            <p style="margin-bottom: 0.5rem;">L'épreuve se déroulera le <strong>mercredi 21 mai 2026</strong>. Il vous est demandé d'être présent dans votre salle <strong>15 minutes avant le début de votre premier oral</strong>.</p>
+            <p style="margin-bottom: 0.5rem;">L'épreuve se déroulera le <strong>mercredi 20 mai 2026</strong>. Il vous est demandé d'être présent dans votre salle <strong>15 minutes avant le début de votre premier oral</strong>.</p>
             <p style="font-size: 0.85em;">Superviseurs de l'épreuve : <strong>Maud Brouillat</strong> et <strong>Karine Chabert</strong>.</p>
         </div>
 

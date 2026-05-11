@@ -54,7 +54,7 @@ function generateEleveHTML(item) {
         
         <div class="print-body">
             <p class="mb-4">L'élève <strong class="text-primary text-xl">${item.eleve}</strong> (Classe : <strong>${item.classe}</strong>)</p>
-            <p class="mb-6">Est convoqué(e) le <strong>mercredi 21 mai 2026</strong> pour présenter l'épreuve orale du Diplôme National du Brevet concernant le domaine suivant :</p>
+            <p class="mb-6">Est convoqué(e) le <strong>mercredi 20 mai 2026</strong> pour présenter l'épreuve orale du Diplôme National du Brevet concernant le domaine suivant :</p>
             
             <div class="info-box mb-6">
                 <p class="info-label">Parcours / Thème choisi</p>
@@ -67,7 +67,7 @@ function generateEleveHTML(item) {
             <div class="grid-2-cols mb-6">
                 <div class="highlight-box">
                     <p class="info-label text-primary">Date et heure de passage</p>
-                    <p class="text-xl font-bold">mercredi 21 mai 2026</p>
+                    <p class="text-xl font-bold">mercredi 20 mai 2026</p>
                     <p class="text-2xl font-bold mt-1">${item.heure}</p>
                     <p class="text-sm text-muted mt-2">Présence requise 15 min avant l'heure indiquée.</p>
                 </div>
