@@ -173,7 +173,7 @@ function getGrilleTableHTML(item = null) {
         </tr>
         <tr>
             <td rowspan="4" class="center">Maîtrise du<br>sujet<br>présenté</td>
-            <td>Organiser son exposé oral de manière structurée (introduction avec problématique, développement, conclusion).</td>
+            <td>Organiser son exposé oral de manière structurée (introduction avec problématique, développement, conclusion) en respectant le temps imparti</td>
             <td></td><td></td><td></td><td></td>
         </tr>
         <tr>
